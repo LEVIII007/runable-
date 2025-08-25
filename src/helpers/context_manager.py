@@ -2,11 +2,9 @@ import json
 import hashlib
 import os
 import time
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Dict, Any, List, Optional
 from pathlib import Path
-import pickle
 from dataclasses import dataclass, asdict
-from langchain_core.messages import BaseMessage
 from src.config.logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -210,19 +208,6 @@ class ContextManager:
         
         return self._add_chunk(session_id, chunk)
     
-    def add_file_context(self, session_id: str, file_path: str, content: str) -> str:
-        """Add file content to session"""
-        
-        chunk_id = self._generate_chunk_id(content, "file")
-        chunk = ContextChunk(
-            id=chunk_id,
-            content=content,
-            type="file",
-            file_path=file_path
-        )
-        
-        return self._add_chunk(session_id, chunk)
-    
     def add_conversation_context(self, session_id: str, message: str) -> str:
         """Add conversation message to session"""
         
@@ -288,56 +273,6 @@ class ContextManager:
         selected_chunks.sort(key=lambda x: x.timestamp)
         
         return selected_chunks
-    
-    def get_context_summary(self, session_id: str) -> Dict[str, Any]:
-        """Get summary information about a session's context"""
-        
-        if session_id not in self.sessions:
-            return {
-                "session_id": session_id,
-                "exists": False
-            }
-        
-        session = self.sessions[session_id]
-        
-        type_counts = {}
-        for chunk in session.chunks:
-            type_counts[chunk.type] = type_counts.get(chunk.type, 0) + 1
-        
-        return {
-            "session_id": session_id,
-            "exists": True,
-            "total_chunks": len(session.chunks),
-            "total_tokens": session.total_tokens,
-            "type_counts": type_counts,
-            "created_at": session.created_at,
-            "last_accessed": session.last_accessed
-        }
-    
-    def cleanup_old_sessions(self, max_age_days: int = 7):
-        """Clean up old sessions that haven't been accessed recently"""
-        
-        cutoff_time = time.time() - (max_age_days * 24 * 3600)
-        sessions_to_remove = []
-        
-        for session_id, session in self.sessions.items():
-            if session.last_accessed < cutoff_time:
-                sessions_to_remove.append(session_id)
-        
-        for session_id in sessions_to_remove:
-            try:
-                # Remove session file
-                session_file = self.storage_path / f"{session_id}.json"
-                if session_file.exists():
-                    session_file.unlink()
-                
-                # Remove from memory
-                del self.sessions[session_id]
-                
-                logger.info(f"Cleaned up old session {session_id}")
-                
-            except Exception as e:
-                logger.error(f"Failed to cleanup session {session_id}: {str(e)}")
     
     def build_context_prompt(self, session_id: str, max_tokens: int = 8000) -> str:
         """Build a context prompt for the LLM from session history"""

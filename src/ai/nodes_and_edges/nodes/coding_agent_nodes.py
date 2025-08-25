@@ -6,7 +6,6 @@ from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 from src.ai.states.coding_agent import CodingAgentState, CodeSolution, ExecutionResult
 from src.helpers.code_exec import get_executor, CodeExecutor
 from src.helpers.context_manager import get_context_manager
-from src.helpers.gui_control import get_gui_controller
 from src.helpers.create_script import _create_run_script
 from src.ai.llms.gemini import create_llm
 from src.config.logging_config import get_logger
@@ -399,11 +398,9 @@ def debug_code_node(state: CodingAgentState) -> CodingAgentState:
     latest_result = state["execution_results"][-1]
     
     if latest_result.success:
-        # No debugging needed
         state["next_action"] = "analyze"
         return state
     
-    # Add debugging information to messages
     debug_message = HumanMessage(content=f"""
 Code execution failed with the following error:
 
@@ -435,7 +432,6 @@ def analyze_results_node(state: CodingAgentState) -> CodingAgentState:
     latest_result = state["execution_results"][-1]
     
     if latest_result.success:
-        # Success - prepare final output
         analysis_message = HumanMessage(content=f"""
 The code executed successfully! 
 
@@ -452,7 +448,6 @@ Execution time: {latest_result.execution_time:.2f} seconds""")
         
         state["messages"].append(analysis_message)
         
-        # Generate final analysis
         llm = create_llm()
         try:
             response = llm.invoke(state["messages"])
@@ -464,7 +459,6 @@ Execution time: {latest_result.execution_time:.2f} seconds""")
             state["final_output"] = f"Task completed successfully. Output: {latest_result.output}"
             state["next_action"] = "finish"
     else:
-        # Failed execution - continue debugging
         state["next_action"] = "debug"
     
     return state
@@ -491,7 +485,6 @@ def should_continue_node(state: CodingAgentState) -> Literal["generate", "execut
     if next_action == "finish":
         return "finish"
     
-    # Return the next planned action
     return next_action
 
 
