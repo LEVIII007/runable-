@@ -80,12 +80,6 @@ async def get_job_status(job_id: str):
         logger.error(f"Failed to get job status for {job_id}: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to retrieve job status")
 
-
-@router.get("/jobs", response_model=JobListResponse)
-async def list_jobs(
-    page: int = Query(1, ge=1, description="Page number"),
-    page_size: int = Query(20, ge=1, le=100, description="Number of jobs per page")
-):
     """
     List all coding jobs with pagination.
     
@@ -123,119 +117,6 @@ async def list_jobs(
     except Exception as e:
         logger.error(f"Failed to list jobs: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to retrieve job list")
-
-
-@router.delete("/jobs/{job_id}")
-async def cancel_job(job_id: str):
-    """
-    Cancel a running coding job.
-    
-    Cancels the job if it's currently pending or running.
-    """
-    try:
-        job_manager = get_job_manager()
-        success = job_manager.cancel_job(job_id)
-        
-        if not success:
-            raise HTTPException(
-                status_code=400, 
-                detail="Job cannot be cancelled (not found or already completed)"
-            )
-        
-        return {"message": f"Job {job_id} cancelled successfully"}
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Failed to cancel job {job_id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to cancel job")
-
-
-@router.get("/download/{filename}")
-async def download_results(filename: str):
-    """
-    Download results from a completed coding job.
-    
-    Returns a zip file containing all generated files and results.
-    """
-    try:
-        job_manager = get_job_manager()
-        download_path = job_manager.job_storage_path / "downloads" / filename
-        
-        if not download_path.exists():
-            raise HTTPException(status_code=404, detail="Download file not found")
-        
-        return FileResponse(
-            path=str(download_path),
-            filename=filename,
-            media_type="application/zip"
-        )
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Failed to serve download {filename}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to serve download")
-
-
-@router.get("/health", response_model=HealthResponse)
-async def health_check():
-    """
-    Get the health status of the coding agent service.
-    
-    Returns service information and current job statistics.
-    """
-    try:
-        job_manager = get_job_manager()
-        stats = job_manager.get_stats()
-        
-        return HealthResponse(
-            status="healthy",
-            version=VERSION,
-            uptime=stats["uptime"],
-            active_jobs=stats["active_jobs"],
-            total_jobs=stats["total_jobs"]
-        )
-        
-    except Exception as e:
-        logger.error(f"Health check failed: {str(e)}")
-        return HealthResponse(
-            status="unhealthy",
-            version=VERSION,
-            uptime=0,
-            active_jobs=0,
-            total_jobs=0
-        )
-
-
-@router.post("/test")
-async def test_coding_agent():
-    """
-    Test endpoint to verify the coding agent is working.
-    
-    Schedules a simple test task and returns the job ID.
-    """
-    test_task = TaskRequest(
-        task="Create a simple Python script that prints 'Hello, World!' and calculates 2+2",
-        language="python",
-        max_iterations=3,
-        timeout=60,
-        debug_mode=True
-    )
-    
-    try:
-        job_manager = get_job_manager()
-        job_id = await job_manager.schedule_job(test_task)
-        
-        return {
-            "message": "Test task scheduled successfully",
-            "job_id": job_id,
-            "test_task": test_task.task
-        }
-        
-    except Exception as e:
-        logger.error(f"Test failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Test failed: {str(e)}")
 
 
 # Background task to clean up old jobs

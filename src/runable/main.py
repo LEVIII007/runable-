@@ -17,7 +17,7 @@ app.include_router(coding_agent_router, prefix="/api/coding-agent", tags=["codin
 
 @app.get("/")
 async def root():
-    return {"message": "Hello from trench-ai!"}
+    return {"message": "Hello from shashank!"}
 
 @app.get("/health")
 async def health_check():
