@@ -54,7 +54,6 @@ RUN pip3 install --no-cache-dir -r requirements.txt
 
 # Copy application code and configuration
 COPY src ./src
-COPY scripts ./scripts
 # Copy .env file if it exists (use .env.example as template)
 COPY .env* ./
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf

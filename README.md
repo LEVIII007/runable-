@@ -1,19 +1,19 @@
 # Runable AI - Coding Agent
 
-Hey! So we've been working on this coding agent thing and honestly, it's been a bit of a journey. Here's what we've got so far - some stuff works, some stuff is... well, let's call it "in progress" 😅
-
-## What We've Actually Built
+## What I've Actually Built
 
 ### 1. The Coding Agent (Kinda Works)
 
-We built a coding agent using LangGraph that can:
+I built a coding agent using LangGraph that can:
 
 - Take a task description and try to generate code for it
 - Execute Python, JavaScript, and shell commands (with some basic safety checks)
 - Create files and manage a workspace
+- can open editor, terminal in GUI
 - Run through multiple iterations trying to fix errors
-
-**The catch:** Right now it only handles single files. No fancy multi-file projects yet. but it can be implemented.
+- I have kept it limited to single file.
+- no orchestration layer as of now, there is a single container where agent, noVNC, and other tools are running.
+- **The catch:** Right now it only handles single files. No fancy multi-file projects yet. but it can be implemented.
 
 ### 2. LangGraph Workflow (Actually Pretty Cool)
 
@@ -122,20 +122,19 @@ This part actually works pretty well! You can submit tasks and track their progr
 - `GET /api/coding-agent/status/:id` - Check job status
 - `GET /api/coding-agent/download/:filename` - Download results
 
-## What's Next (If We Keep Going)
+## What's Next (If I Keep Going)
 
 1. Actually integrate the GUI tools with the agent
 2. Build proper multi-file project support
 3. Implement real sandboxing (maybe Firecracker)
 4. Make the context management actually useful
 5. Add horizontal scaling with k8s/Nomad
-6. Write some tests (we've been winging it)
+6. more tools
 
 ## The Bottom Line
 
-We've got about 50% of what was asked for. The foundation is there - the agent can generate and execute code, we have a job system, and the Docker container has all the tools. But it's rough around the edges and missing some key features.
+I've got about 50% of what was asked for. The foundation is there - the agent can generate and execute code, we have a job system, and the Docker container has all the tools. But it's rough around the edges and missing some key features.
 
-The good news is the architecture is solid enough that we could build on it. The bad news is we'd need another few hours to make it production-ready.
+but this architecture is not scalable at all.
 
-Anyway, that's where we're at! 🚀
-# runable-gonna-hire-me
+# runable-gonna-hire-me?

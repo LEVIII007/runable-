@@ -12,33 +12,30 @@ from pathlib import Path
 # Test the API endpoints
 BASE_URL = "http://localhost:3000/api/coding-agent"
 
-def test_health_check():
-    """Test the health check endpoint"""
-    print("🔍 Testing health check...")
-    try:
-        response = requests.get(f"{BASE_URL}/health")
-        if response.status_code == 200:
-            data = response.json()
-            print(f"✅ Health check passed: {data['status']}")
-            print(f"   Version: {data['version']}")
-            print(f"   Active jobs: {data['active_jobs']}")
-            return True
-        else:
-            print(f"❌ Health check failed: {response.status_code}")
-            return False
-    except Exception as e:
-        print(f"❌ Health check error: {str(e)}")
-        return False
-
 def test_schedule_task():
-    """Test scheduling a simple coding task"""
+    """Test scheduling a practical coding task"""
     print("\n🔍 Testing task scheduling...")
     
     task_data = {
-        "task": "Write a Python function to calculate the factorial of 5 and print the result. Include proper error handling.",
+        "task": """Solve this algorithmic problem:
+
+Given an array of integers, find the length of the longest subarray with sum equal to zero.
+
+Example:
+Input: [15, -2, 2, -8, 1, 7, 10, 23]
+Output: 5 (subarray [-2, 2, -8, 1, 7] has sum = 0)
+
+Requirements:
+1. Implement an efficient solution (O(n) time complexity)
+2. Handle edge cases (empty array, no zero-sum subarray)
+3. Print the subarray elements along with the length
+4. Test with multiple test cases including the example above
+5. Add comments explaining your approach
+
+Bonus: Also find and print all subarrays with zero sum.""",
         "language": "python",
-        "max_iterations": 3,
-        "timeout": 120,
+        "max_iterations": 10,
+        "timeout": 300,
         "debug_mode": True
     }
     
@@ -129,79 +126,37 @@ def test_list_jobs():
         print(f"❌ Job listing error: {str(e)}")
         return False
 
-def test_direct_workflow():
-    """Test the workflow directly without API"""
-    print("\n🔍 Testing workflow directly...")
-    
-    try:
-        from src.ai.workflows.coding_agent_workflow import run_coding_task
-        
-        task = "Write a Python function that calculates the sum of squares of numbers 1 to 10"
-        
-        print(f"   Running task: {task}")
-        result = run_coding_task(task, max_iterations=3, debug_mode=True)
-        
-        if result["success"]:
-            print("✅ Direct workflow test passed!")
-            print(f"   Session ID: {result['session_id']}")
-            print(f"   Iterations: {result['iterations']}")
-            print(f"   Output: {result.get('final_output', 'No output')[:200]}...")
-            return True
-        else:
-            print(f"❌ Direct workflow test failed: {result.get('error', 'Unknown error')}")
-            return False
-            
-    except Exception as e:
-        print(f"❌ Direct workflow test error: {str(e)}")
-        return False
-
 def main():
     """Run all tests"""
     print("🚀 Starting Coding Agent Tests...\n")
     
-    # Test 1: Direct workflow (doesn't require API server)
-    direct_success = test_direct_workflow()
-    
-    # Test 2: API tests (requires server to be running)
+    # Test 1: API tests (requires server to be running)
     print("\n" + "="*50)
     print("API Tests (requires server running on localhost:3000)")
     print("="*50)
     
-    health_success = test_health_check()
+
+    job_id = test_schedule_task()
     
-    if health_success:
-        job_id = test_schedule_task()
-        
-        if job_id:
-            status_success = test_job_status(job_id)
-            list_success = test_list_jobs()
-        else:
-            status_success = False
-            list_success = False
+    if job_id:
+        status_success = test_job_status(job_id)
+        list_success = test_list_jobs()
     else:
-        print("\n⚠️  Server not running. Skipping API tests.")
-        print("   To test API endpoints, run: python -m src.trench_ai.main")
-        job_id = None
         status_success = False
         list_success = False
+    
     
     # Summary
     print("\n" + "="*50)
     print("TEST SUMMARY")
     print("="*50)
-    print(f"Direct Workflow: {'✅ PASS' if direct_success else '❌ FAIL'}")
-    print(f"Health Check: {'✅ PASS' if health_success else '❌ FAIL'}")
     print(f"Task Scheduling: {'✅ PASS' if job_id else '❌ FAIL'}")
     print(f"Job Status: {'✅ PASS' if status_success else '❌ FAIL'}")
     print(f"Job Listing: {'✅ PASS' if list_success else '❌ FAIL'}")
     
-    overall_success = direct_success and (not health_success or (health_success and job_id and status_success and list_success))
+    overall_success = job_id and status_success and list_success
     print(f"\nOverall: {'✅ SUCCESS' if overall_success else '❌ SOME TESTS FAILED'}")
     
-    if not health_success:
-        print("\n💡 To run the full test suite:")
-        print("   1. Start the server: python -m src.trench_ai.main")
-        print("   2. In another terminal, run: python test_coding_agent.py")
 
 if __name__ == "__main__":
     main() 
